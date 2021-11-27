@@ -6,9 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sl.databinding.FragmentMainBinding
@@ -16,10 +14,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import android.util.DisplayMetrics
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.*
 import kotlin.math.roundToInt
 
 
@@ -41,12 +38,18 @@ class PlaceholderFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val page = arguments?.getInt(ARG_SECTION_NUMBER) ?: 1
         pageViewModel = ViewModelProvider(this).get(PageViewModel::class.java).apply {
-            setIndex(arguments?.getInt(ARG_SECTION_NUMBER) ?: 1)
+            setIndex(page)
+        }
+        val collection: String = if (page != 2) {
+            "shops"
+        } else {
+            "archive"
         }
         flowersListViewModel = ViewModelProvider(
             this,
-            FlowersListViewModelFactory(requireContext())
+            FlowersListViewModelFactory(requireContext(), collection)
         ).get(ShopsViewModel::class.java)
     }
 
@@ -69,19 +72,30 @@ class PlaceholderFragment : Fragment() {
 
         flowersListViewModel.flowersLiveData.observe(requireActivity(),
             {
-                it?.let {
-                    if(it.isEmpty()){
-                        binding.sectionLabel.visibility = VISIBLE
-                    }else{
-                        binding.progressBar.visibility = INVISIBLE
-                        binding.sectionLabel.visibility = INVISIBLE
+                it?.let { state ->
+                    when {
+                        state.isSuccess() -> {
+                            binding.progressBar.visibility = INVISIBLE
+                            if (state.value?.isEmpty() == true) {
+                                binding.sectionLabel.visibility = VISIBLE
+                            } else {
+                                binding.sectionLabel.visibility = INVISIBLE
+                            }
+                            flowersAdapter.submitList(state.value)
+                        }
+                        state.isError() -> {
+                            binding.sectionLabel.visibility = VISIBLE
+                            binding.sectionLabel.text = state.error
+                        }
+                        state.isLoading() -> {
+                            binding.sectionLabel.visibility = INVISIBLE
+                            binding.progressBar.visibility = VISIBLE
+                        }
                     }
-                    flowersAdapter.submitList(it)
                 }
             })
-        flowersListViewModel.fetchNextPage(flowersAdapter.itemCount.toLong())
-        {
-        }
+        flowersListViewModel.fetchFirstPage()
+
         binding.recycler.addOnScrollListener(
             object : RecyclerView.OnScrollListener() {
                 override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -114,7 +128,7 @@ class PlaceholderFragment : Fragment() {
     private fun adapterOnClick(flower: Shop) {
         val intent = Intent(requireContext(), Item::class.java)
         intent.putExtra(SHOP_ID, flower.id!!)
-        intent.putExtra(IS_ARCHIVED,pageViewModel.text.value)
+        intent.putExtra(IS_ARCHIVED, pageViewModel.text.value)
         startActivity(intent)
     }
 

@@ -15,7 +15,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:visibility="visible"/>
+        android:visibility="visible"
+        android:layout_marginTop="10dp"/>
 
     <LinearLayout
         android:id="@+id/linearLayout"
@@ -40,7 +41,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="pomidor"
+                android:hint="@string/tomato"
                 android:id="@+id/input"/>
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -52,13 +53,19 @@
             android:textColor="@android:color/holo_red_dark"
             android:visibility="invisible" />
 
+        <ProgressBar
+            android:id="@+id/progressBar3"
+            android:max="100"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="30dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
