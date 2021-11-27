@@ -1,0 +1,4 @@
+<resources>
+    <dimen name="fab_margin">200dp</dimen>
+    <dimen name="shop_item_height">150dp</dimen>
+</resources>
