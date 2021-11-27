@@ -1,7 +1,5 @@
 package com.example.sl.ui.main
 
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.ktx.firestore
@@ -11,19 +9,16 @@ import kotlin.coroutines.suspendCoroutine
 
 interface ShopRepository {
 
-    suspend fun getShopList(alreadyFetchedElements: Long): List<Shop>
-
-    fun addShop(newFlower: Shop)
-
-    suspend fun getItems(shopId: String): List<ItemElement>
-    suspend fun addItem(shopId: String, itemName: String, time: String): String
-    suspend fun removeItem(shopId: String, ie: ItemElement)
+    suspend fun getShopList(alreadyFetchedElements: Long): State<List<Shop>>
+    suspend fun getItems(shopId: String): State<List<ItemElement>>
+    suspend fun addItem(shopId: String, itemName: String, time: String): State<String>
+    suspend fun removeItem(shopId: String, ie: ItemElement): State<Unit>
 }
 
 data class State<T>(
     val value: T?,
     val error: String?,
-    val isLoading: Boolean?
+    val loading: Boolean?
 ) {
     fun isSuccess(): Boolean {
         return value != null
@@ -34,24 +29,39 @@ data class State<T>(
     }
 
     fun isLoading(): Boolean {
-        return isLoading == true
+        return loading == true
+    }
+
+    companion object {
+        fun <T> success(value: T): State<T> {
+            return State(value = value, error = null, loading = null)
+        }
+
+        fun <T> error(message: String): State<T> {
+            return State(value = null, error = message, loading = null)
+        }
+
+        fun <T> loading(): State<T> {
+            return State(value = null, error = null, loading = true)
+        }
     }
 }
 
-class FirebaseShopRepository : ShopRepository {
+class FirebaseShopRepository(private val collection: String) : ShopRepository {
     val db = Firebase.firestore
     var lastFetched: DocumentSnapshot? = null
 
-    override suspend fun getShopList(alreadyFetchedElements: Long): List<Shop> {
+
+    override suspend fun getShopList(alreadyFetchedElements: Long): State<List<Shop>> {
         return suspendCoroutine { cont ->
             val query =
                 if (lastFetched == null) {
-                    db.collection("shops")
+                    db.collection(collection)
                         .orderBy("creationTime")
                         .limit(FETCH_AT_ONCE.toLong())
                 } else {
                     val last: DocumentSnapshot = lastFetched!!
-                    db.collection("shops")
+                    db.collection(collection)
                         .orderBy("creationTime")
                         .startAfter(last)
                         .limit(FETCH_AT_ONCE.toLong())
@@ -67,21 +77,18 @@ class FirebaseShopRepository : ShopRepository {
                     lastFetched = it.documents.last()
                 }
                 val a = it.toObjects(Shop::class.java)
-                cont.resume(a)
+                cont.resume(State.success(a))
             }.addOnFailureListener {
                 Log.w(FirebaseShopRepository::class.java.name, "Error getting documents.", it)
+                cont.resume(State.error("Please try again later"))
             }
         }
     }
 
-    override fun addShop(newFlower: Shop) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getItems(shopId: String): List<ItemElement> {
+    override suspend fun getItems(shopId: String): State<List<ItemElement>> {
         return suspendCoroutine { cont ->
             val query =
-                db.collection("shops").document(shopId).collection("items")
+                db.collection(collection).document(shopId).collection("items")
 
             query.get().addOnSuccessListener {
                 for (document in it) {
@@ -91,16 +98,17 @@ class FirebaseShopRepository : ShopRepository {
                     )
                 }
                 val a = it.toObjects(ItemElement::class.java)
-                cont.resume(a)
+                cont.resume(State.success(a))
             }.addOnFailureListener {
                 Log.w(FirebaseShopRepository::class.java.name, "Error getting documents.", it)
+                cont.resume(State.error("Please try again later"))
             }
         }
     }
 
-    override suspend fun addItem(shopId: String, itemName: String, time: String): String {
+    override suspend fun addItem(shopId: String, itemName: String, time: String): State<String> {
         return suspendCoroutine { cont ->
-            db.collection("shops")
+            db.collection(collection)
                 .document(shopId)
                 .collection("items")
                 .add(
@@ -113,19 +121,19 @@ class FirebaseShopRepository : ShopRepository {
                         FirebaseShopRepository::class.java.name,
                         "Successfully added item with ${it.id} to shop ${shopId}"
                     )
-                    cont.resume(it.id)
+                    cont.resume(State.success(it.id))
                 }
         }
     }
 
-    override suspend fun removeItem(shopId: String, ie: ItemElement) {
+    override suspend fun removeItem(shopId: String, ie: ItemElement): State<Unit> {
         return suspendCoroutine { cont ->
-            db.collection("shops")
+            db.collection(collection)
                 .document(shopId)
                 .collection("items")
                 .document(ie.id!!)
                 .delete().addOnSuccessListener {
-                    cont.resume(Unit)
+                    cont.resume(State.success(Unit))
                 }
         }
     }
@@ -160,45 +168,44 @@ object ShopRepositoryMock : ShopRepository {
     )
 
 
-    override suspend fun getShopList(alreadyFetchedElements: Long): List<Shop> {
+    override suspend fun getShopList(alreadyFetchedElements: Long): State<List<Shop>> {
 
-        return listOf(
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "shopname", "Asd"),
-            Shop("asd", "________________", "Asd")
+        return State.success(
+            listOf(
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "shopname", "Asd"),
+                Shop("asd", "________________", "Asd")
+            )
         )
     }
 
-    override fun addShop(newFlower: Shop) {
-        list.add(newFlower)
+    override suspend fun getItems(shopId: String): State<List<ItemElement>> {
+        return State.success(listItems)
     }
 
-    override suspend fun getItems(shopId: String): List<ItemElement> {
-        return listItems
-    }
-
-    override suspend fun addItem(shopId: String, itemName: String, time: String): String {
+    override suspend fun addItem(shopId: String, itemName: String, time: String): State<String> {
         listItems.add(ItemElement("saed", itemName, time))
-        return "fdkls"
+        return State.success("fdkls")
     }
 
-    override suspend fun removeItem(shopId: String, ie: ItemElement) {
+    override suspend fun removeItem(shopId: String, ie: ItemElement): State<Unit> {
         listItems.remove(ie)
+        return State.success(Unit)
     }
 
 }

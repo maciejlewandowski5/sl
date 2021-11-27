@@ -4,4 +4,6 @@
     <string name="tab_text_2">Tab 2</string>
     <string name="please_enter_product_name">Please enter product name</string>
     <string name="pole_nie_mo_e_by_puste">Pole nie może być puste</string>
+    <string name="tomato">tomato</string>
+    <string name="this_collection_is_empty">This collection is empty</string>
 </resources>

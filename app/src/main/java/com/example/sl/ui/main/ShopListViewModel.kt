@@ -3,46 +3,54 @@ package com.example.sl.ui.main
 import android.content.Context
 import androidx.lifecycle.*
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
 
 class ShopsViewModel(val dataSource: ShopRepository) : ViewModel() {
 
-    private val _shops = MutableLiveData<List<Shop>>(emptyList())
-    val flowersLiveData: LiveData<List<Shop>> = _shops
-
-    fun insertFlower(flowerName: String?, flowerDescription: String?) {
-        if (flowerName == null || flowerDescription == null) {
-            return
-        }
-
-        val newFlower = Shop(
-            "",
-            "ShopName",
-           ""
-        )
-
-        dataSource.addShop(newFlower)
-    }
+    private val _shops = MutableLiveData<State<List<Shop>>>(State.loading())
+    val flowersLiveData: LiveData<State<List<Shop>>> = _shops
 
     fun fetchNextPage(alreadyFetchedElements: Long, callback: () -> Unit) {
         viewModelScope.launch {
-            val addAll = _shops.value?.toMutableList()
-            addAll?.addAll(dataSource.getShopList(alreadyFetchedElements))
-            addAll?.let {
-                _shops.value = it
-                callback()
+            if (_shops.value?.isSuccess() == true) {
+                val fetchedState = dataSource.getShopList(alreadyFetchedElements)
+                when {
+                    fetchedState.isSuccess() -> {
+                        _shops.value?.value?.toMutableList()?.let {
+                            it.addAll(fetchedState.value!!)
+                            _shops.value = State.success(it)
+                            callback()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun fetchFirstPage() {
+        if (_shops.value?.isLoading() == true) {
+            viewModelScope.launch {
+                val fetchedState = dataSource.getShopList(0)
+                when {
+                    fetchedState.isSuccess() -> {
+                        mutableListOf<Shop>().let {
+                            it.addAll(fetchedState.value!!)
+                            _shops.value = State.success(it)
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-class FlowersListViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+class FlowersListViewModelFactory(private val context: Context, val collection: String) :
+    ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ShopsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return ShopsViewModel(
-                dataSource = FirebaseShopRepository()
+                dataSource = FirebaseShopRepository(collection = collection)
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
