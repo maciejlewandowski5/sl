@@ -11,16 +11,17 @@ class ShopsViewModel(val dataSource: ShopRepository) : ViewModel() {
 
     fun fetchNextPage(alreadyFetchedElements: Long, callback: () -> Unit) {
         viewModelScope.launch {
-            if (_shops.value?.isSuccess() == true) {
-                val fetchedState = dataSource.getShopList(alreadyFetchedElements)
-                when {
-                    fetchedState.isSuccess() -> {
-                        _shops.value?.value?.toMutableList()?.let {
-                            it.addAll(fetchedState.value!!)
-                            _shops.value = State.success(it)
-                            callback()
-                        }
-                    }
+            val fetchedState = dataSource.getShopList(alreadyFetchedElements)
+            when {
+                fetchedState.isSuccess() -> {
+                    _shops.value?.value?.toMutableList()?.let {
+                        it.addAll(fetchedState.value!!)
+                        _shops.value = State.success(it)
+                    } ?: _shops.setValue(fetchedState)
+                    callback()
+                }
+                fetchedState.isError() -> {
+                    _shops.value = fetchedState
                 }
             }
         }
@@ -36,6 +37,9 @@ class ShopsViewModel(val dataSource: ShopRepository) : ViewModel() {
                             it.addAll(fetchedState.value!!)
                             _shops.value = State.success(it)
                         }
+                    }
+                    fetchedState.isError() -> {
+                        _shops.value = fetchedState
                     }
                 }
             }
