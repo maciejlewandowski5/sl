@@ -1,7 +1,7 @@
 package com.example.sl
 
-import com.example.sl.ui.main.Shop
-import com.example.sl.ui.main.State
+import com.example.sl.model.Shop
+import com.example.sl.model.State
 
 
 fun error(): State<List<Shop>> =

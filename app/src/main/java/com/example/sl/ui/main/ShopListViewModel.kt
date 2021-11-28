@@ -1,53 +1,67 @@
 package com.example.sl.ui.main
 
-import android.content.Context
 import androidx.lifecycle.*
+import com.example.sl.model.Shop
+import com.example.sl.model.State
+import com.example.sl.repository.FirebaseShopRepository
+import com.example.sl.repository.ShopRepository
 import kotlinx.coroutines.launch
+
+typealias MutableLiveDataShops = MutableLiveData<State<List<Shop>>>
+typealias LiveDataShops = LiveData<State<List<Shop>>>
 
 class ShopsViewModel(val dataSource: ShopRepository) : ViewModel() {
 
-    private val _shops = MutableLiveData<State<List<Shop>>>(State.loading())
-    val flowersLiveData: LiveData<State<List<Shop>>> = _shops
+    private val _shops = MutableLiveDataShops(State.loading())
+    val shops: LiveDataShops = _shops
 
-    fun fetchNextPage(alreadyFetchedElements: Long, callback: () -> Unit) {
+    var tab: Int = 0
+
+    fun fetchNextPage(alreadyFetchedElements: Long, onSuccess: () -> Unit) {
         viewModelScope.launch {
-            val fetchedState = dataSource.getShopList(alreadyFetchedElements)
-            when {
-                fetchedState.isSuccess() -> {
-                    _shops.value?.value?.toMutableList()?.let {
-                        it.addAll(fetchedState.value!!)
-                        _shops.value = State.success(it)
-                    } ?: _shops.setValue(fetchedState)
-                    callback()
-                }
-                fetchedState.isError() -> {
-                    _shops.value = fetchedState
-                }
+            handleResult(dataSource.getShopList(alreadyFetchedElements), onSuccess)
+        }
+    }
+
+    private fun handleResult(
+        fetchedState: State<List<Shop>>,
+        onSuccess: () -> Unit
+    ) {
+        when {
+            fetchedState.isSuccess() -> {
+                attachResult(fetchedState)
+                onSuccess()
+            }
+            fetchedState.isError() -> {
+                _shops.value = fetchedState
             }
         }
+    }
+
+    private fun attachResult(
+        fetchedState: State<List<Shop>>,
+    ) {
+        _shops.value?.value?.toMutableList()?.let { join(it, fetchedState) } ?: _shops.setValue(
+            fetchedState
+        )
+    }
+
+    private fun join(
+        it: MutableList<Shop>,
+        fetchedState: State<List<Shop>>
+    ) {
+        it.addAll(fetchedState.value!!)
+        _shops.value = State.success(it)
     }
 
     fun fetchFirstPage() {
         if (_shops.value?.isLoading() == true) {
-            viewModelScope.launch {
-                val fetchedState = dataSource.getShopList(0)
-                when {
-                    fetchedState.isSuccess() -> {
-                        mutableListOf<Shop>().let {
-                            it.addAll(fetchedState.value!!)
-                            _shops.value = State.success(it)
-                        }
-                    }
-                    fetchedState.isError() -> {
-                        _shops.value = fetchedState
-                    }
-                }
-            }
+            viewModelScope.launch { _shops.value = dataSource.getShopList(0) }
         }
     }
 }
 
-class FlowersListViewModelFactory(private val context: Context, val collection: String) :
+class ShopsViewModelFactory(private val collection: String) :
     ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {

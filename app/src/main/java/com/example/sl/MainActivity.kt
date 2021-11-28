@@ -1,15 +1,13 @@
 package com.example.sl
 
 import android.os.Bundle
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.snackbar.Snackbar
+
 import com.google.android.material.tabs.TabLayout
 import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
-import com.example.sl.ui.main.SectionsPagerAdapter
+
 import com.example.sl.databinding.ActivityMainBinding
+import com.example.sl.ui.main.adapters.SectionsPagerAdapter
 
 class MainActivity : AppCompatActivity() {
 

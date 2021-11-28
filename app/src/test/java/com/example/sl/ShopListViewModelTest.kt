@@ -1,10 +1,10 @@
 package com.example.sl
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
+import com.example.sl.model.Shop
 import com.example.sl.ui.main.*
+import com.example.sl.model.State
+import com.example.sl.repository.ShopRepository
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.*
@@ -16,8 +16,6 @@ import org.junit.Test
 import org.junit.Before
 import org.junit.Rule
 import org.junit.rules.TestRule
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
 
 @ExperimentalCoroutinesApi
 class ShopListViewModelTest {
@@ -41,7 +39,7 @@ class ShopListViewModelTest {
         lifeCycleTestOwner = LifeCycleTestOwner()
         lifeCycleTestOwner.onCreate()
         postViewModel = ShopsViewModel(repositoryMock)
-        postViewModel.flowersLiveData.observe(lifeCycleTestOwner) {
+        postViewModel.shops.observe(lifeCycleTestOwner) {
             stateValue = it
         }
     }

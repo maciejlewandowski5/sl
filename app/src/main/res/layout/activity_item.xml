@@ -49,7 +49,7 @@
             android:id="@+id/errorText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/pole_nie_mo_e_by_puste"
+            android:text="@string/please_provide_name"
             android:textColor="@android:color/holo_red_dark"
             android:visibility="invisible" />
 
@@ -90,7 +90,7 @@
         android:id="@+id/newItem"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Add new item"
+        android:text="@string/add_new_item"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/recycler"
