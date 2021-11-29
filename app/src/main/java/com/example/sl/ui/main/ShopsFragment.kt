@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import android.util.DisplayMetrics
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
+import com.example.sl.Item
 import com.example.sl.Keys.IS_ARCHIVED
 import com.example.sl.Keys.SHOP_ID
 import com.example.sl.model.Shop

@@ -1,4 +1,4 @@
-package com.example.sl.ui.main;
+package com.example.sl;
 
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
@@ -19,6 +19,8 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.sl.ItemsListViewModelFactory;
+import com.example.sl.ItemsViewModel;
 import com.example.sl.databinding.ActivityItemBinding;
 import com.example.sl.ui.main.adapters.ItemAdapter;
 import com.example.sl.model.ItemElement;

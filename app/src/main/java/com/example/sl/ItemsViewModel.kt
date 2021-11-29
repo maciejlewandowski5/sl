@@ -1,4 +1,4 @@
-package com.example.sl.ui.main
+package com.example.sl
 
 import androidx.lifecycle.*
 import com.example.sl.model.ItemElement

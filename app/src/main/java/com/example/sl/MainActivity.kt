@@ -3,14 +3,12 @@ package com.example.sl
 import android.os.Bundle
 
 import com.google.android.material.tabs.TabLayout
-import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 
 import com.example.sl.databinding.ActivityMainBinding
 import com.example.sl.ui.main.adapters.SectionsPagerAdapter
 import com.google.android.material.tabs.TabLayoutMediator
-import java.security.Key
 
 class MainActivity : AppCompatActivity() {
 
