@@ -5,9 +5,12 @@ import android.os.Bundle
 import com.google.android.material.tabs.TabLayout
 import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.viewpager2.widget.ViewPager2
 
 import com.example.sl.databinding.ActivityMainBinding
 import com.example.sl.ui.main.adapters.SectionsPagerAdapter
+import com.google.android.material.tabs.TabLayoutMediator
+import java.security.Key
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,10 +22,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val sectionsPagerAdapter = SectionsPagerAdapter(this, supportFragmentManager)
-        val viewPager: ViewPager = binding.viewPager
+        val sectionsPagerAdapter = SectionsPagerAdapter(lifecycle, supportFragmentManager)
+        val viewPager: ViewPager2 = binding.viewPager
         viewPager.adapter = sectionsPagerAdapter
         val tabs: TabLayout = binding.tabs
-        tabs.setupWithViewPager(viewPager)
+        TabLayoutMediator(tabs, viewPager) { tab, position ->
+            tab.text = resolveCollection(position + 1)
+        }.attach()
     }
 }

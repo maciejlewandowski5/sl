@@ -1,29 +1,19 @@
 package com.example.sl.ui.main.adapters
 
-import android.content.Context
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentPagerAdapter
-import com.example.sl.R
+import androidx.lifecycle.Lifecycle
+import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.example.sl.ui.main.ShopsFragment
 
-private val TAB_TITLES = arrayOf(
-    R.string.tab_text_1,
-    R.string.tab_text_2
-)
+class SectionsPagerAdapter(lifecycle: Lifecycle, fm: FragmentManager) :
+    FragmentStateAdapter(fm,lifecycle) {
 
-class SectionsPagerAdapter(private val context: Context, fm: FragmentManager) :
-    FragmentPagerAdapter(fm,BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
-
-    override fun getItem(position: Int): Fragment {
-        return ShopsFragment.newInstance(position + 1)
-    }
-
-    override fun getPageTitle(position: Int): CharSequence {
-        return context.resources.getString(TAB_TITLES[position])
-    }
-
-    override fun getCount(): Int {
+    override fun getItemCount(): Int {
         return 2
+    }
+
+    override fun createFragment(position: Int): Fragment {
+        return ShopsFragment.newInstance(position + 1)
     }
 }
